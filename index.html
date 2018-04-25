@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+		<link rel="stylesheet" type="text/css" href="http://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css"/>
+		<link rel="stylesheet" type="text/css" href="css/publish.css"/>
+		<script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+		<style type="text/css">
+			body{
+				justify-content: center;
+				align-items: center;
+				padding: 30px;
+			}
+			#mycanvas{
+				box-sizing: content-box;
+			}
+			
+		</style>
+		<script type="text/javascript"  language="JavaScript">
+			window.onload = function(){
+				var ctx = document.getElementById('mycanvas').getContext('2d');
+				var back = new Image();
+                back.src = "img/bak.jpg";
+                
+				back.onload=function(){
+					//画棋盘
+                	ctx.drawImage(back,40,40,600,600);
+                	//画棋盘线
+                	ctx.beginPath();
+                	for (var i=0;i<16;i++) {
+                		//x轴
+                		ctx.moveTo(40,40*i);ctx.lineTo(640,40*i);
+                		//y轴
+                		ctx.moveTo(40*i,40);ctx.lineTo(40*i,640);
+                	}
+                	ctx.closePath();
+				
+                	ctx.strokeStyle = 'white';
+                	ctx.lineWidth=2;
+                	ctx.stroke();
+                	//画数字
+//              	ctx.textAlign='center';
+//              	ctx.textBaseline='middle';
+//              	ctx.font='15px Arial';
+//              	for(var i=0;i<16;i++){
+//              		ctx.fillText(i,40+40*i,10);
+//              		ctx.fillText(i,10,40+40*i);
+//              		ctx.fillText(i,40+40*i,670);
+//              		ctx.fillText(i,670,40+40*i);
+//              	}
+                	
+                };
+				
+			}
+			//胜利函数
+			function victory(target,arr){
+				var ctx = document.getElementById('mycanvas').getContext('2d');
+				//画红线
+				ctx.beginPath();
+				ctx.moveTo(arr[0][0]*40,arr[0][1]*40);ctx.lineTo(arr[1][0]*40,arr[1][1]*40);
+				ctx.closePath();
+				ctx.strokeStyle = 'red';
+            	ctx.lineWidth=1;
+            	ctx.stroke();
+            	
+				$(target).unbind();//移除事件
+			}
+			
+			$(function(){
+				var ctx = document.getElementById('mycanvas').getContext('2d');
+				var black = new Image();
+                var white = new Image();
+                var flag = 1;
+                black.src = "img/black.png";
+                white.src = "img/white.png";
+				
+				$('body').css('height',$(window).height());
+				var mycanvas = $('#mycanvas');
+				
+				var arr= new Array(15);
+				//初始化数组(记录旗子位置)
+				for(var i=0;i<16;i++){
+					for(var j=0;j<16;j++){
+						arr[i]=new Array(15);
+					}
+				};
+				//画红线的坐标数组
+				var arr_xy= new Array(2);
+				for(var i=0;i<2;i++){
+					arr_xy[i]=new Array(2);
+				};
+				
+				//点击事件
+				mycanvas.on('click',function(e){
+					x =parseInt(e.clientX - mycanvas.offset().left);
+					y =parseInt(e.clientY - mycanvas.offset().top);
+					//是否超出边框外
+					if(x>20 && x<660 && y>20 && y<660){
+						var x = Math.floor((x-20)/40);
+						var y = Math.floor((y-20)/40);
+						//保存xy初始值
+						var xx = x;
+						var yy = y;
+						//判断该位置是否被占用
+						if(arr[x][y] == undefined){
+							//画黑棋1
+							if(flag == 1){
+								arr[x][y]=1;
+								ctx.drawImage(black,x*40+20,y*40+20);
+								flag = 0;
+							//画白棋2
+							}else{
+								arr[x][y]=0;
+								ctx.drawImage(white,x*40+20,y*40+20);
+								flag = 1;
+							}
+							
+							//判断是否连成直线
+							
+							//判断寻找的值
+							var val;
+							if(flag == 0){
+								val = 1;
+							}else{
+								val = 0;
+							}
+							//判断横线
+							for(var i=0,j=0;i<16;i++){
+								if(arr[i][y] == val){
+									j++;
+								}else{
+									j=0;
+								}
+								if(j == 5){
+									//画线坐标
+									arr_xy[0][0] = i+1;
+									arr_xy[0][1] = y+1;
+									arr_xy[1][0] = i-4+1;
+									arr_xy[1][1] = y+1;
+									victory(this,arr_xy);
+								}
+							}
+							//判断竖线
+							for(var i=0,j=0;i<16;i++){
+								if(arr[x][i] == val){
+									j++;
+								}else{
+									j=0;
+								}
+								if(j == 5){
+									//画线坐标
+									arr_xy[0][0] = x+1;
+									arr_xy[0][1] = i+1;
+									arr_xy[1][0] = x+1;
+									arr_xy[1][1] = i-4+1;
+									victory(this,arr_xy);
+								}
+							}
+
+							//判断斜线\斜杠
+							if(x>=y){
+								x=x-y;
+								y=0;
+							}else{
+								y=y-x;
+								x=0;
+							}
+							
+							for(var j=0;x<16 && y<16;x++,y++){
+								if(arr[x][y] == val){
+									j++;
+								}else{
+									j=0;
+								}
+								if(j == 5){
+									//画线坐标
+									arr_xy[0][0] = x+1;
+									arr_xy[0][1] = y+1;
+									arr_xy[1][0] = x-4+1;
+									arr_xy[1][1] = y-4+1;
+									victory(this,arr_xy);
+								}
+							}
+							x = xx;
+							y = yy;
+							//判断斜线/反斜杠
+							if(x+y<16){
+								x=x+y;
+								y=0;
+							}else{
+								y=x+y-15;
+								x=15;
+							}
+							for(var j=0;x>=0 && y<16;x--,y++){
+								if(arr[x][y] == val){
+									j++;
+								}else{
+									j=0;
+								}
+								if(j == 5){
+									//画线坐标
+									arr_xy[0][0] = x+1;
+									arr_xy[0][1] = y+1;
+									arr_xy[1][0] = x+4+1;
+									arr_xy[1][1] = y-4+1;
+									victory(this,arr_xy);
+								}
+							}
+						}
+						
+					}
+				});
+			})
+		</script>
+	</head>
+	<body class="flex" >
+		<!--注意：这里的width和height不是style的属性-->
+		<canvas id="mycanvas" width="680" height="680"></canvas>
+	</body>
+</html>
